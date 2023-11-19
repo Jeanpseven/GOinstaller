@@ -1,0 +1,53 @@
+import os
+import platform
+import subprocess
+import shutil
+import urllib.request
+import tarfile
+
+# Função para instalar o Go
+def install_go():
+    go_version = "1.17.2"
+    system_platform = platform.system().lower()
+    file_name = f"go{go_version}.{system_platform}-amd64.tar.gz"
+    download_url = f"https://golang.org/dl/{file_name}"
+
+    # Baixar o arquivo de instalação do Go
+    urllib.request.urlretrieve(download_url, file_name)
+
+    # Extrair o arquivo baixado
+    with tarfile.open(file_name, 'r:gz') as tar:
+        tar.extractall(path="/usr/local")
+
+    # Adicionar o diretório bin do Go ao PATH
+    os.environ['PATH'] += ':/usr/local/go/bin'
+    
+    print("Go foi instalado com sucesso!")
+
+# Verificar se o Go está instalado
+try:
+    subprocess.run(["go", "version"], check=True)
+    print("Go já está instalado.")
+except subprocess.CalledProcessError:
+    print("Go não encontrado. Instalando...")
+    install_go()
+
+# Função para executar ou compilar um script Go
+def run_or_build_go_script(script_path):
+    if not os.path.isfile(script_path):
+        print("O script Go não foi encontrado no caminho fornecido.")
+        return
+
+    script_name = os.path.basename(script_path)
+    script_name_without_extension = os.path.splitext(script_name)[0]
+
+    # Verificar se o script é um executável
+    if os.access(script_path, os.X_OK):
+        subprocess.run([f"./{script_name}"])
+    else:
+        # Compilar o script Go
+        subprocess.run(["go", "build", "-o", script_name_without_extension, script_path])
+        print(f"Executável criado: ./{script_name_without_extension}")
+
+# Exemplo de uso
+# run_or_build_go_script("/caminho/para/seu/script.go")
